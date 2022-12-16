@@ -1,9 +1,15 @@
 package com.plasticviking.iappsync.services;
 
+import com.plasticviking.iappsync.data.ShallowIAPPRecord;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
@@ -27,14 +33,37 @@ public class IAPPInterface {
 		final AtomicBoolean success = new AtomicBoolean(false);
 
 		template.query("SELECT IMAGE FROM IAPP_IMAGE WHERE IMAGE_ID = ?", rs -> {
-			try {
-				StreamUtils.copy(rs.getBlob(1).getBinaryStream(), baos);
-				success.set(true);
-			} catch (IOException e) {
-				log.error("Unhandled exception while copying image data", e);
-			}
-		}, imageId);
+				try {
+					StreamUtils.copy(rs.getBlob(1).getBinaryStream(), baos);
+					success.set(true);
+				} catch (IOException e) {
+					log.error("Unhandled exception while copying image data", e);
+				}
+			},
+			imageId
+		);
 
 		return baos.toByteArray();
 	}
+
+	public void processIAPPImages(IAPPImageConsumer consumer) {
+		template.query("SELECT IMAGE_ID, SAMPLE_POINT_ID, SITE_ID, TREATMENT_ID FROM IAPP_IMAGE ORDER BY IMAGE_ID ASC",
+			new RowCallbackHandler() {
+				@Override
+				public void processRow(ResultSet rs) throws SQLException {
+					while (rs.next()) {
+						ShallowIAPPRecord row = new ShallowIAPPRecord(
+							rs.getLong(1),
+							Optional.of(rs.getLong(2)),
+							Optional.of(rs.getLong(3)),
+							Optional.of(rs.getLong(4)));
+
+						consumer.consume(row);
+					}
+				}
+			});
+
+
+	}
+
 }

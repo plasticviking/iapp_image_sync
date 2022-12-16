@@ -1,15 +1,13 @@
 package com.plasticviking.iappsync;
 
 import com.plasticviking.iappsync.services.IAPPInterface;
+import com.plasticviking.iappsync.services.InvasivesInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
-
-import java.util.Base64;
 
 @Component
 public class Migrator implements ApplicationRunner {
@@ -19,13 +17,14 @@ public class Migrator implements ApplicationRunner {
 	@Autowired
 	IAPPInterface iappInterface;
 
+	@Autowired
+	InvasivesInterface invasivesInterface;
+
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
 		log.info("Starting up");
 
-		byte[] data = iappInterface.getImageData(200001);
-		byte[] encoded = Base64.getEncoder().encode(data);
-		System.out.println(new String(encoded));
+		iappInterface.processIAPPImages(record -> invasivesInterface.hasImage(record.imageID()));
 
 		log.info("Run complete");
 	}
