@@ -2,6 +2,8 @@ package com.plasticviking.iappsync;
 
 import com.plasticviking.iappsync.services.IAPPInterface;
 import com.plasticviking.iappsync.services.InvasivesInterface;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +26,13 @@ public class Migrator implements ApplicationRunner {
 	public void run(ApplicationArguments args) throws Exception {
 		log.info("Starting up");
 
-		iappInterface.processIAPPImages(record -> invasivesInterface.hasImage(record.imageID()));
+		AtomicLong processed = new AtomicLong(0);
 
-		log.info("Run complete");
+		iappInterface.processIAPPImages(record -> {
+			invasivesInterface.importIAPPRecord(record);
+			processed.incrementAndGet();
+		});
+
+		log.info("Run complete, processed " + processed.get() + " records");
 	}
 }

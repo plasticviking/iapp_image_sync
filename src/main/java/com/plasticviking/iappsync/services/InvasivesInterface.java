@@ -1,5 +1,6 @@
 package com.plasticviking.iappsync.services;
 
+import com.plasticviking.iappsync.data.ShallowIAPPRecord;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StreamUtils;
 
 @Component
-@Transactional
 public class InvasivesInterface {
 
 	private Logger log = LoggerFactory.getLogger(InvasivesInterface.class.getCanonicalName());
@@ -23,9 +23,10 @@ public class InvasivesInterface {
 		this.template = template;
 	}
 
-	public boolean hasImage(long id) {
-		return true;
-	};
+	@Transactional
+	public void importIAPPRecord(ShallowIAPPRecord record) {
+		log.info(String.format("Importing IAPP Image with ID %s", record.imageID()));
+	}
 
 
 }

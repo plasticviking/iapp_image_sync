@@ -48,18 +48,15 @@ public class IAPPInterface {
 
 	public void processIAPPImages(IAPPImageConsumer consumer) {
 		template.query("SELECT IMAGE_ID, SAMPLE_POINT_ID, SITE_ID, TREATMENT_ID FROM IAPP_IMAGE ORDER BY IMAGE_ID ASC",
-			new RowCallbackHandler() {
-				@Override
-				public void processRow(ResultSet rs) throws SQLException {
-					while (rs.next()) {
-						ShallowIAPPRecord row = new ShallowIAPPRecord(
-							rs.getLong(1),
-							Optional.of(rs.getLong(2)),
-							Optional.of(rs.getLong(3)),
-							Optional.of(rs.getLong(4)));
+			rs -> {
+				while (rs.next()) {
+					ShallowIAPPRecord row = new ShallowIAPPRecord(
+						rs.getLong(1),
+						Optional.of(rs.getLong(2)),
+						Optional.of(rs.getLong(3)),
+						Optional.of(rs.getLong(4)));
 
-						consumer.consume(row);
-					}
+					consumer.consume(row);
 				}
 			});
 
