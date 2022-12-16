@@ -25,7 +25,7 @@ public class Migrator implements ApplicationRunner {
 
 		byte[] data = iappInterface.getImageData(200001);
 		byte[] encoded = Base64.getEncoder().encode(data);
-		System.out.println(encoded);
+		System.out.println(new String(encoded));
 
 		log.info("Run complete");
 	}
