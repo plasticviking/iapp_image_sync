@@ -3,8 +3,6 @@ RUN mkdir /opt/iapp
 WORKDIR /opt/iapp
 COPY . .
 RUN chmod +x gradlew
-RUN ./gradlew clean build --no-daemon
-RUN mkdir /.gradle
-RUN chgrp -R 0 /.gradle && chmod -R 0775 /.gradle
+RUN ./gradlew bootJar --no-daemon
 RUN chgrp -R 0 /opt/iapp && chmod -R g=u /opt/iapp
-CMD ["./gradlew", "bootRun"]
+CMD ["java", "-jar", "build/libs/iapp_image_sync-1.0-SNAPSHOT.jar"]

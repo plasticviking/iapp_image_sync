@@ -1,6 +1,5 @@
 package com.plasticviking.iappsync.services;
 
-import com.plasticviking.iappsync.Migrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -10,7 +9,6 @@ import org.springframework.util.StreamUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
@@ -29,9 +27,8 @@ public class IAPPInterface {
 		final AtomicBoolean success = new AtomicBoolean(false);
 
 		template.query("SELECT IMAGE FROM IAPP_IMAGE WHERE IMAGE_ID = ?", rs -> {
-
 			try {
-				StreamUtils.copy(rs.getBinaryStream(0), baos);
+				StreamUtils.copy(rs.getBlob(1).getBinaryStream(), baos);
 				success.set(true);
 			} catch (IOException e) {
 				log.error("Unhandled exception while copying image data", e);
