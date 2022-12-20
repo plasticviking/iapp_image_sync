@@ -39,10 +39,10 @@ public class InvasivesInterface {
 	public void importIAPPRecord(ShallowIAPPRecord record, Blob imageData) {
 		SqlRowSet rowSet = template.queryForRowSet("SELECT count(original_iapp_id) from invasivesbc.iapp_imported_images where original_iapp_id = ?", record.imageID());
 		rowSet.next();
-		final boolean preexisting = rowSet.getLong(1) == 0;
+		final boolean preexisting = rowSet.getLong(1) == 1;
 
 		if (preexisting) {
-			log.info(String.format("Image with IAPP id %s already exists"));
+			log.info(String.format("Image with IAPP id %s already exists", record.imageID()));
 		} else {
 			ByteArrayOutputStream rawImageData = new ByteArrayOutputStream();
 			String detectedMimeType = null;
