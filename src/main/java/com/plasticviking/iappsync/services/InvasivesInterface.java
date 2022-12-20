@@ -38,6 +38,7 @@ public class InvasivesInterface {
 	@Transactional
 	public void importIAPPRecord(ShallowIAPPRecord record, Blob imageData) {
 		SqlRowSet rowSet = template.queryForRowSet("SELECT count(original_iapp_id) from invasivesbc.iapp_imported_images where original_iapp_id = ?", record.imageID());
+		rowSet.next();
 		final boolean preexisting = rowSet.getLong(1) == 0;
 
 		if (preexisting) {
