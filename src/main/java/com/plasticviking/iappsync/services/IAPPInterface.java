@@ -1,26 +1,23 @@
 package com.plasticviking.iappsync.services;
 
 import com.plasticviking.iappsync.data.ShallowIAPPRecord;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class IAPPInterface {
 
-	private Logger log = LoggerFactory.getLogger(IAPPInterface.class.getCanonicalName());
+	private final Logger log = LoggerFactory.getLogger(IAPPInterface.class.getCanonicalName());
 
 	private final JdbcTemplate template;
 
@@ -47,19 +44,28 @@ public class IAPPInterface {
 	}
 
 	public void processIAPPImages(IAPPImageConsumer consumer) {
-		template.query("SELECT IMAGE_ID, SAMPLE_POINT_ID, SITE_ID, TREATMENT_ID FROM IAPP_IMAGE ORDER BY IMAGE_ID ASC",
+		final int MAX_PER_RUN = 10;
+		AtomicInteger processed = new AtomicInteger(0);
+
+		template.query("SELECT IMAGE_ID, SAMPLE_POINT_ID, SITE_ID, TREATMENT_ID, IMAGE, PERSPECTIVE_CODE,REVISION_COUNT, COMMENTS, REFERENCE_NO, IMAGE_DATE, INVASIVE_PLANT_AGENCY_CODE FROM IAPP_IMAGE ORDER BY IMAGE_ID ASC",
 			rs -> {
-				while (rs.next()) {
+				while (rs.next() && processed.get() < MAX_PER_RUN) {
 					ShallowIAPPRecord row = new ShallowIAPPRecord(
 						rs.getLong(1),
-						Optional.of(rs.getLong(2)),
-						Optional.of(rs.getLong(3)),
-						Optional.of(rs.getLong(4)));
+						rs.getLong(2),
+						rs.getLong(3),
+						rs.getLong(4),
+						rs.getString(6),
+						rs.getLong(7),
+						rs.getString(8),
+						rs.getString(9),
+						rs.getDate(10)
+					);
 
-					consumer.consume(row);
+					consumer.consume(row, rs.getBlob(5));
+					processed.incrementAndGet();
 				}
 			});
-
 
 	}
 
