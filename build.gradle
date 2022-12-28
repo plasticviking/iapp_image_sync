@@ -23,6 +23,8 @@ dependencies {
 	implementation 'com.oracle.database.jdbc:ojdbc10:19.17.0.0'
 
 	implementation 'org.apache.tika:tika-core:2.6.0'
+
+	implementation 'com.amazonaws:aws-java-sdk:1.12.372'
 }
 
 test {
