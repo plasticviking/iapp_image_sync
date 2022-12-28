@@ -54,13 +54,22 @@ public class InvasivesInterface {
 
 	@Transactional
 	public void importIAPPRecord(ShallowIAPPRecord record, Blob imageData) {
-		SqlRowSet rowSet = template.queryForRowSet("SELECT count(original_iapp_id) from invasivesbc.iapp_imported_images where original_iapp_id = ?", record.imageID());
-		rowSet.next();
-		final boolean preexisting = rowSet.getLong(1) == 1;
+		SqlRowSet existingCountRowSet = template.queryForRowSet("SELECT count(original_iapp_id) from invasivesbc.iapp_imported_images where original_iapp_id = ?", record.imageID());
+		existingCountRowSet.next();
+		final boolean preexisting = existingCountRowSet.getLong(1) == 1;
+		boolean hasMediaKey = false;
 
 		if (preexisting) {
 			log.info(String.format("Image with IAPP id %s already exists", record.imageID()));
-		} else {
+			SqlRowSet existingMediaKeyRowSet = template.queryForRowSet("SELECT media_key from invasivesbc.iapp_imported_images where original_iapp_id = ?", record.imageID());
+			if (!existingMediaKeyRowSet.next()) {
+				log.error("Expected to find a matching row for query. Skipping this record.");
+				return;
+			}
+			hasMediaKey = existingMediaKeyRowSet.getString(1) != null && !existingMediaKeyRowSet.getString(1).isEmpty();
+		}
+
+		if (!preexisting || (preexisting && !hasMediaKey)) {
 			ByteArrayOutputStream rawImageData = new ByteArrayOutputStream();
 			String detectedMimeType = null;
 
@@ -72,36 +81,37 @@ public class InvasivesInterface {
 			} catch (IOException | SQLException e) {
 				log.error("Error copying stream data from IAPP", e);
 			}
-
-			try {
-				template.update("INSERT INTO invasivesbc.iapp_imported_images" +
-						"(original_iapp_id," +
-						" perspective_code," +
-						" sample_point_id," +
-						" site_id," +
-						" treatment_id," +
-						" image_date," +
-						" reference_no," +
-						" comments," +
-						" detected_mime_type," +
-						" revision_count_at_import_time," +
-						" media_key)" +
-						" values (?,?,?,?,?,?,?,?,?,?,?)",
-					record.imageID(),
-					record.perspectiveCode(),
-					record.samplePointID(),
-					record.siteID(),
-					record.treatmentID(),
-					record.imageDate(),
-					record.referenceNo(),
-					record.comments(),
-					detectedMimeType,
-					record.revisionCount(),
-					null
-				);
-			} catch (DataAccessException e) {
-				log.error("Error writing image import record in invasives DB", e);
-			}
 		}
+
+//			try {
+//				template.update("INSERT INTO invasivesbc.iapp_imported_images" +
+//						"(original_iapp_id," +
+//						" perspective_code," +
+//						" sample_point_id," +
+//						" site_id," +
+//						" treatment_id," +
+//						" image_date," +
+//						" reference_no," +
+//						" comments," +
+//						" detected_mime_type," +
+//						" revision_count_at_import_time," +
+//						" media_key)" +
+//						" values (?,?,?,?,?,?,?,?,?,?,?)",
+//					record.imageID(),
+//					record.perspectiveCode(),
+//					record.samplePointID(),
+//					record.siteID(),
+//					record.treatmentID(),
+//					record.imageDate(),
+//					record.referenceNo(),
+//					record.comments(),
+//					detectedMimeType,
+//					record.revisionCount(),
+//					null
+//				);
+//			} catch (DataAccessException e) {
+//				log.error("Error writing image import record in invasives DB", e);
+//			}
 	}
+
 }

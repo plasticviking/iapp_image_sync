@@ -44,12 +44,11 @@ public class IAPPInterface {
 	}
 
 	public void processIAPPImages(IAPPImageConsumer consumer) {
-		final int MAX_PER_RUN = 10;
 		AtomicInteger processed = new AtomicInteger(0);
 
 		template.query("SELECT IMAGE_ID, SAMPLE_POINT_ID, SITE_ID, TREATMENT_ID, IMAGE, PERSPECTIVE_CODE,REVISION_COUNT, COMMENTS, REFERENCE_NO, IMAGE_DATE, INVASIVE_PLANT_AGENCY_CODE FROM IAPP_IMAGE ORDER BY IMAGE_ID ASC",
 			rs -> {
-				while (rs.next() && processed.get() < MAX_PER_RUN) {
+				while (rs.next()) {
 					ShallowIAPPRecord row = new ShallowIAPPRecord(
 						rs.getLong(1),
 						rs.getLong(2),
