@@ -1,5 +1,7 @@
 package com.plasticviking.iappsync.services;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.plasticviking.iappsync.configuration.ObjectStoreConfigurationProperties;
 import com.plasticviking.iappsync.data.ShallowIAPPRecord;
 
 import java.io.ByteArrayOutputStream;
@@ -7,8 +9,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import java.util.stream.Collectors;
 import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +32,8 @@ public class InvasivesInterface {
 
 	private Logger log = LoggerFactory.getLogger(InvasivesInterface.class.getCanonicalName());
 
+	private Set<String> seenMimeTypes = new HashSet<>();
+
 	@Autowired
 	@Qualifier("InvasivesJdbcTemplate")
 	private JdbcTemplate template;
@@ -34,6 +41,16 @@ public class InvasivesInterface {
 	@Autowired
 	private Tika tikaInstance;
 
+	@Autowired
+	AmazonS3 objectStoreClient;
+
+	@Autowired
+	ObjectStoreConfigurationProperties objectStoreConfigurationProperties;
+
+	public void dumpSeenTypes() {
+		log.info("Dumping mime types we have observed in this run:");
+		log.info(String.join(", ", seenMimeTypes));
+	}
 
 	@Transactional
 	public void importIAPPRecord(ShallowIAPPRecord record, Blob imageData) {
@@ -51,6 +68,7 @@ public class InvasivesInterface {
 				StreamUtils.copy(fromIAPPStream, rawImageData);
 				detectedMimeType = tikaInstance.detect(rawImageData.toByteArray());
 				log.info(String.format("Detected MIME type %s for image %s", detectedMimeType, record.imageID()));
+				seenMimeTypes.add(detectedMimeType);
 			} catch (IOException | SQLException e) {
 				log.error("Error copying stream data from IAPP", e);
 			}
