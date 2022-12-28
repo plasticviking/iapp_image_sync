@@ -38,11 +38,6 @@ public class Migrator implements ApplicationRunner {
 
 		invasivesInterface.dumpSeenTypes();
 
-//		ObjectListing objects = objectStoreClient.listObjects(objectStoreConfigurationProperties.bucketName());
-//		objects.getObjectSummaries().stream().forEach(summary -> {
-//			log.info("Object: " + summary.getKey());
-//		});
-
 		log.info("Run complete, processed " + processed.get() + " records");
 	}
 }
