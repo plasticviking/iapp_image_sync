@@ -46,7 +46,17 @@ public class IAPPInterface {
 	public void processIAPPImages(IAPPImageConsumer consumer) {
 		AtomicInteger processed = new AtomicInteger(0);
 
-		template.query("SELECT IMAGE_ID, SAMPLE_POINT_ID, SITE_ID, TREATMENT_ID, IMAGE, PERSPECTIVE_CODE,REVISION_COUNT, COMMENTS, REFERENCE_NO, IMAGE_DATE, INVASIVE_PLANT_AGENCY_CODE FROM IAPP_IMAGE ORDER BY IMAGE_ID ASC",
+		template.query("SELECT IMAGE_ID," +
+				"SITE_ID," +
+				"SAMPLE_POINT_ID," +
+				"TREATMENT_ID," +
+				"IMAGE," +
+				"PERSPECTIVE_CODE," +
+				"REVISION_COUNT," +
+				"COMMENTS," +
+				"REFERENCE_NO," +
+				"IMAGE_DATE," +
+				"INVASIVE_PLANT_AGENCY_CODE FROM IAPP_IMAGE ORDER BY IMAGE_ID ASC",
 			rs -> {
 				while (rs.next()) {
 					ShallowIAPPRecord row = new ShallowIAPPRecord(
